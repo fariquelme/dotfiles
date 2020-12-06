@@ -18,21 +18,45 @@ unlet autoload_plug_path
 
 "======== Install Plugins
 call plug#begin('~/.config/nvim/plugins')
-    "NerdTree Navigator
+    " NerdTree Navigator (File Explorer)
     Plug 'scrooloose/nerdtree'
-    "Gruvbox theme"
+    " Gruvbox theme (Better colors)
     Plug 'morhetz/gruvbox'
-    "Airline status bar
+    " Airline status bar (More Functional Status Bar)
     Plug 'vim-airline/vim-airline'
-    "Better CSV visualization
+    " CSV (CSV visualization and functionality)
     Plug 'chrisbra/csv.vim'
-    " Coc.NVIM
+    " Coc.NVIM (Autocompletition)
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
-    " Colorizer
+    " Colorizer (Display code colors)
     Plug 'norcalli/nvim-colorizer.lua'
+    " CtrlP (fuzzy file search)
+    Plug 'ctrlpvim/ctrlp.vim'
+    " Vim-Signify (Git Differences)
+    if has('nvim') || has('patch-8.0.902')
+        Plug 'mhinz/vim-signify'
+    else
+        Plug 'mhinz/vim-signify', { 'branch': 'legacy' }
+    endif
+    " vim-gutentags (Autogenerate/Mantain ctags)
+    if executable('ctags')
+        Plug 'ludovicchabant/vim-gutentags' "Manage tags (auto)
+    else
+        echo 'Skipping vim-gutentags, ctags is not installed'
+    endif
     ""Markdown Preview for VIM with Mathjax Support
     Plug 'iamcco/mathjax-support-for-mkdp'
     Plug 'iamcco/markdown-preview.vim'
+    " Window Maximizer (to break/restore window from tabs)
+    Plug 'szw/vim-maximizer'
+    "HTML Tag Completition"
+    Plug 'mattn/emmet-vim'
+    " Vim Surround
+    Plug  'tpope/vim-surround'
+    "Align code
+    Plug 'junegunn/vim-easy-align'
+    ""Solidity Syntax"
+    "Plug 'TovarishFin/vim-solidity'
 call plug#end()
 
 if plug_install
@@ -45,7 +69,36 @@ unlet plug_install
 "##########################################
 
 
-" Markdown Preview
+"============ Vim Maximizer
+"Toggle maximizer
+nnoremap mw :MaximizerToggle<cr>
+
+"============ CtrlP
+"Ignore some files and dirs
+let g:ctrlp_custom_ignore = '\v[\/](node_modules|target|dist|__pycache__)|(\.(swp|swo|ico|git|svn))$'
+
+"============ Signify
+" Faster sign updates on CursorHold/CursorHoldI
+set updatetime=100
+" Git Blame
+nnoremap <leader>gb :exe "!git blame -L" . line("."). ",+8 %"<cr>
+nnoremap <leader>gl :exe "!git log -n 8"<cr>
+
+"Show diff of whole file
+nnoremap <leader>sd :SignifyDiff<cr>
+"Show diff of hunk
+nnoremap <leader>shd :SignifyHunkDiff<cr>
+" Undo touched hunk under cursor
+nnoremap <leader>shu :SignifyHunkUndo<cr>
+" Toggle sideline and highlight
+nnoremap <leader>st :SignifyToggle<cr>:SignifyToggleHighlight<cr>
+" Fold untouch lines
+nnoremap <leader>st <Plug>(signify-toggle-fold)
+" hunk jumping
+nmap <leader>sj <plug>(signify-next-hunk)
+nmap <leader>sk <plug>(signify-prev-hunk)
+
+"============ Markdown Preview
 let g:mkdp_auto_close = 1
 let g:mkdp_preview_options = {
     \ 'mkit': {},
@@ -76,6 +129,7 @@ let g:coc_global_extensions = [
 \ 'coc-highlight',
 \ 'coc-emoji',
 \ 'coc-vimlsp',
+\ 'coc-prettier',
 \ ]
 
 " Configure python interpreter
@@ -102,6 +156,10 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 let g:coc_snippet_next = '<tab>'
+"Forma selected lines
+vmap <leader>f  <Plug>(coc-format-selected)
+nmap <leader>f  <Plug>(coc-format-selected)
+
 
 
 
@@ -286,7 +344,25 @@ noremap ' `
 "============ Windows managment
 
 "Easy resize
-noremap + :res +5<CR>
-noremap - :res -5<CR>
-noremap < :vertical :resize -5<CR>
-noremap > :vertical :resize +5<CR>
+"noremap + :res +5<CR>
+"noremap - :res -5<CR>
+"noremap <C-W>< :vert :res -5<CR>
+"noremap <C-W>> :vert :res +5<CR>
+
+"============ Buffers managment
+noremap bn :bn <CR>
+noremap bp :bp <CR>
+noremap bd :bp\|bd #<CR>
+
+"============ Python functions
+" Run visual block of python code
+fu PyRun() range
+    echo system('python -c ' . shellescape(join(getline(a:startinline, a:endinglastline), "\n")))
+endf
+vmap <C-Y> :call PyRun()<CR>
+
+" Insert pdb trace
+noremap <leader>pdb <ESC>Oimport pdb; pdb.set_trace();<ESC>j
+
+"============ Emmet HTML
+let g:user_emmet_leader_key=','
