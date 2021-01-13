@@ -4,8 +4,15 @@
 "===============================================================================
 "============================ Create undos director ============================
 "===============================================================================
-if !isdirectory("~/.config/nvim/undos")
-    call mkdir("~/.config/nvim/undos", "p")
+if !isdirectory($HOME."/.config/nvim/undos")
+    call mkdir($HOME."/.config/nvim/undos", "p")
+endif
+"===============================================================================
+"==================== Create custom syntax files directories ===================
+"===============================================================================
+let custom_syntax_dir_path=$HOME."/.config/nvim/after/syntax/"
+if !isdirectory(custom_syntax_dir_path)
+    call mkdir(custom_syntax_dir_path, "p")
 endif
 "===============================================================================
 "=========================== Auto-Install Vim-Plug =============================
@@ -25,6 +32,7 @@ unlet autoload_plug_path
 "===============================================================================
 "============================ General Configurations ===========================
 "===============================================================================
+" Dont hide any character
 let $NVIM_TUI_ENABLE_TRUE_COLOR=1
 " Change leader key to space (Default \)
 let mapleader = " " 
@@ -37,14 +45,14 @@ set undodir=~/.config/nvim/undos " set undofile
 set undofile                     " Use undofile
 set updatetime=100               " Faster update time for CursorHold/CursorHoldI (default 4000)
 set termguicolors                " Enable 24-bit RGB colors in the Terminal Emulator
-set listchars=tab:\▏\ ,trail:␣   " Show leading tabs and trailing whitspaces
+set listchars=tab:\│\ ,trail:␣   " Show leading tabs and trailing whitspaces
 set list                         " Show list chars
 set nu                           " Set line numbers
 set relativenumber               " Show relative line numbers
 set noswapfile                   " Disable swapfiles (not needed with Undotree and undofile)
 set t_ut=                        " Disable background color erase (to avoid artifacts in tmux)
 set t_Co=256                     " Use 256 colors in terminal emulator
-set fillchars+=vert:\▏           " Change vertical windwo split symbol
+set fillchars+=vert:\│           " Change vertical windwo split symbol
 set colorcolumn=120              " Mark column number 120
 set tabstop=4                    " The width of a TAB is set to 4.
 set shiftwidth=4                 " Indents will have a width of 4
@@ -63,8 +71,6 @@ syntax enable                    " Turn on syntax highlight
 "===============================================================================
 "==================================== Remaps ===================================
 "===============================================================================
-"Change marks char
-noremap ' `
 "Easy resize
 noremap <leader>+ :res +15<CR>
 noremap <leader>- :res -15<CR>
@@ -75,23 +81,37 @@ noremap <leader>bn :bn <CR>
 noremap <leader>bp :bp <CR>
 noremap <leader>bd :bp\|bd #<CR>
 " Insert python breakpoint
-noremap <leader>bpp <ESC>O<ESC>0iimport pdb; pdb.set_trace();<ESC>j
+noremap <leader>bpp <ESC>O<ESC>0iimport ipdb; ipdb.set_trace();<ESC>j
 nnoremap <CR> :noh<CR><CR>
+" Exit insert mode in terminal
+tnoremap <Esc> <C-\><C-n>
 "===============================================================================
 "================================== Functions ==================================
 "===============================================================================
+"============================== Toggle conceallevel
+function! g:ToggleConcealLevel()
+  if &conceallevel == 0
+    set conceallevel=2         " Enable conceal
+  else
+    set conceallevel=0         " Disable conceal
+    execute ":IndentLinesDisable"
+  endif
+endfunction
+nnoremap <silent> <leader>tc :call g:ToggleConcealLevel()<cr>
 "============================== Toggle side column
 function! g:ToggleSideColumn()
   if &nu == 0
-     set number         " Disable line numbers
-     set relativenumber " Disable relative numbers
-     set signcolumn=yes " Disable signcolumn
-     set scl=yes        " Disable Signify column
+    set number         " Disable line numbers
+    set relativenumber " Disable relative numbers
+    set signcolumn=yes " Disable signcolumn
+    set scl=yes        " Disable Signify column
+    execute ":IndentLinesEnable"
   else
-     set nonumber         " Enable line numbers
-     set norelativenumber " Enable relative numbers
-     set signcolumn=no    " Enable signcolumn
-     set scl=no           " Enable Signify column
+    set nonumber         " Enable line numbers
+    set norelativenumber " Enable relative numbers
+    set signcolumn=no    " Enable signcolumn
+    set scl=no           " Enable Signify column
+    execute ":IndentLinesDisable"
   endif
 endfunction
 nnoremap <silent> <leader>lt :call g:ToggleSideColumn()<cr>
@@ -118,53 +138,126 @@ inoremap <special> <expr> <Esc>[200~ XTermPasteBegin()
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Plugins @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+"===============================================================================
+"=================================== Vim Plug ==================================
+"===============================================================================
 call plug#begin('~/.config/nvim/plugins') 
-    Plug 'TovarishFin/vim-solidity'        " Solodity syntax
-    Plug 'chrisbra/csv.vim'                " CSV visualization and functionality
-    Plug 'iamcco/markdown-preview.vim'     " Markdown preview support
-    Plug 'iamcco/mathjax-support-for-mkdp' " Markdown  mathjax preview
-    Plug 'junegunn/fzf'                    " Fuzzy Finder
-    Plug 'junegunn/fzf.vim'                " Fuzzy Finder vim integration
-    Plug 'junegunn/vim-easy-align'         " Align objects more easily
-    Plug 'kassio/neoterm'                  " Easy neovim terminal integration
-    Plug 'luochen1990/rainbow'             " highlis parenthesis in different colors
-    Plug 'mattn/emmet-vim'                 " HTML Tag completition
-    Plug 'mbbill/undotree'                 " Visualize undo branches
-    Plug 'mhartington/oceanic-next'        " Ported colorscheme from sublime
-    Plug 'norcalli/nvim-colorizer.lua'     " Display color codes in color
-    Plug 'ryanoasis/vim-devicons'          " Adds devicons to multiple plugins
-    Plug 'scrooloose/nerdtree'             " File Explorer
-    Plug 'szw/vim-maximizer'               " Maximize windows
-    Plug 'tpope/vim-fugitive'              " Git integration
-    Plug 'tpope/vim-surround'              " Surround objects more easyli
-    Plug 'vim-airline/vim-airline'         " More Functional Status Bar
-    " Coc (Completition/linting/Docs)
-    if executable('node')|Plug 'neoclide/coc.nvim',{'branch': 'release'}|else|echom 'Skipping COC'| endif
+    Plug 'TovarishFin/vim-solidity'                        " Solodity syntax
+    Plug 'chrisbra/csv.vim'                                " CSV visualization and functionality
+    Plug 'junegunn/vim-easy-align'                         " Align objects more easily
+    Plug 'mattn/emmet-vim'                                 " HTML Tag completition
+    Plug 'mbbill/undotree'                                 " Visualize undo branches
+    Plug 'mhartington/oceanic-next'                       " Ported colorscheme from sublime
+    "Plug 'ayu-theme/ayu-vim'                               " Ayu colorscheme
+    Plug 'norcalli/nvim-colorizer.lua'                     " Display color codes in color
+    Plug 'skywind3000/asyncrun.vim'
+    Plug 'Yggdroot/indentLine'                             " Indent line
+    Plug 'ryanoasis/vim-devicons'                          " Adds devicons to multiple plugins
+    Plug 'scrooloose/nerdtree'                             " File Explorer
+    Plug 'vwxyutarooo/nerdtree-devicons-syntax'
+    Plug 'junegunn/fzf'                                    " Fuzzy Finder
+    Plug 'junegunn/fzf.vim'                                " Fuzzy Finder vim integration
+    Plug 'hkupty/iron.nvim', { 'branch': 'direct-invoke' } " REPL Manager
+    Plug 'vim-airline/vim-airline'                         " More Functional Status Bar
+    Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']} " Markdown preview
+    Plug 'iamcco/mathjax-support-for-mkdp'                 " Markdown  mathjax preview
+    Plug 'szw/vim-maximizer'                               " Maximize windows
+    Plug 'tpope/vim-fugitive'                              " Git integration
+    Plug 'tpope/vim-surround'                              " Surround objects more easyli
+    Plug 'dag/vim-fish'                                    " Fish syntax
     " Vim-Signify (Display Code versioning changes)
     if has('nvim') || has('patch-8.0.902')|Plug 'mhinz/vim-signify'|else|Plug 'mhinz/vim-signify',{ 'branch': 'legacy' }|endif
-    " Easy ctags managment
-    if executable('ctags')|Plug 'ludovicchabant/vim-gutentags'|else|echom 'Skipping vim-gutentags'|endif
     " Jupytext (to edit notebooks)
     if executable('jupytext')|Plug 'goerz/jupytext.vim'|else|echom 'Skipping goerz/jupytext'|endif
+    " Coc (Completition/linting/Docs)
+    if executable('node')|Plug 'neoclide/coc.nvim',{'branch': 'release'}|else|echom 'Skipping COC'| endif
+    " Easy ctags managment
+    if executable('ctags')|Plug 'ludovicchabant/vim-gutentags'|else|echom 'Skipping vim-gutentags'|endif
 call plug#end()
 if plug_install
     PlugInstall --sync
 endif
 unlet plug_install
+"===============================================================================
+"=================================== Scripts ===================================
+"===============================================================================
+"================================= Hive Syntax
+if !filereadable(custom_syntax_dir_path.'hive.vim')
+    echo 'Downloading hive syntax script'
+    silent exe '!wget -O '. 
+                \ custom_syntax_dir_path. 
+                \ 'hive.vim https://raw.githubusercontent.com/autowitch/hive.vim/master/syntax/hive.vim'
+endif
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Plugins Configurations @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+"===============================================================================
+"=========================== nerdtre syntax highlight ==========================
+"===============================================================================
+let g:webdevicons_conceal_nerdtree_brackets = 0
+let g:WebDevIconsDisableDefaultFolderSymbolColorFromNERDTreeDir = 1
+let g:WebDevIconsDisableDefaultFileSymbolColorFromNERDTreeFile = 1
+let g:NERDTreeFileExtensionHighlightFullName = 1
+let g:NERDTreeExactMatchHighlightFullName = 1
+let g:NERDTreePatternMatchHighlightFullName = 1
+let g:NERDTreeHighlightFolders = 1 " enables folder icon highlighting using exact match
+let g:NERDTreeHighlightFoldersFullName = 1 " highlights the folder name
+
+"===============================================================================
+"================================= indent line =================================
+"===============================================================================
+let g:indentLine_char_list = ['▏']
+let g:indentLine_enabled = 1
+
+"===============================================================================
+"================================= Hive Syntax =================================
+"===============================================================================
+au BufNewFile,BufRead *.hql set filetype=hive expandtab
+au BufNewFile,BufRead *.q set filetype=hive expandtab
+"===============================================================================
+"=================================== Iron-Vim ==================================
+"===============================================================================
+
+lua << EOF
+local iron = require('iron')
+iron.core.set_config{
+    repl_open_cmd = 'rightbelow vertical split',
+    preferred = {
+      python = "ipython"
+    }
+}
+
+
+EOF
+"map <F5> <Cmd>lua require("iron").core.send(vim.api.nvim_buf_get_option(0,"ft"), vim.api.nvim_buf_get_lines(0, 0, -1, false))<Cr>
+noremap <leader>rt :IronRepl<CR>
+noremap <leader>rr :IronRestart<CR>
+noremap <leader>rf :IronFocus<CR>
+
+function SendCellIron()
+    let l:first_line=search('#%%', 'b')
+    let l:last_line=search('#%%')
+    echo ''.l:first_line
+    echo ''.l:last_line
+    exec 'normal! :IronSend! "asdasd"'
+endf
+nnoremap <C-n> :call SendCellIron()<CR>
+
 "===============================================================================
 "================================ Vim Easy Align ===============================
 "===============================================================================
 xmap ga <Plug>(EasyAlign)
 nmap ga <Plug>(EasyAlign)
+let g:easy_align_delimiters = {
+\ '>': { 'pattern': '>>\|=>\|>' },
+\ '#': { 'pattern': '#' },
+\ }
 "===============================================================================
 "=================================== NeoTerm ===================================
 "===============================================================================
-let g:neoterm_default_mod='vertical'
-noremap <leader>ntn :vertical Tnew<cr>
-noremap <leader>tnt :Ttoggle<cr><c-w>jA<esc>
+"let g:neoterm_default_mod='vertical'
+"noremap <leader>ntn :vertical Tnew<cr>
+"noremap <leader>tnt :Ttoggle<cr><c-w>jA<esc>
 "===============================================================================
 "================================== jupytext ===================================
 "===============================================================================
@@ -173,7 +266,7 @@ let g:jupytext_fmt = 'py:percent'   " Set cell format to #%%
 "===============================================================================
 "=================================== Emmet =====================================
 "===============================================================================
-let g:user_emmet_leader_key='\'
+let g:user_emmet_leader_key='?'
 "===============================================================================
 "================================== Rainbow ====================================
 "===============================================================================
@@ -198,20 +291,20 @@ nnoremap mw :MaximizerToggle<cr>
 "============================= Fuzzy Finder (fzf) ==============================
 "===============================================================================
 "================================ Popup Layout configuration
+let $FZF_DEFAULT_COMMAND = "find -L"
 let g:fzf_preview_window = ['right:50%', 'ctrl-/']
 let g:fzf_colors = {'border':  ['fg', 'Comment'] }
 let g:fzf_layout = { 'window': { 'width': 0.95, 'height': 0.8 } }
 "================================ Remaps
-noremap <C-P> :Files <CR>
-noremap <leader>fh :Files ~<CR>
-noremap <leader>fp :Files ~/Proyects<CR>
+noremap <C-P> :Files %:p:h<CR>
+noremap <leader>fh :Files $HOME<CR>
+noremap <leader>fp :Files $HOME/Proyects<CR>
 noremap <leader>fl :Lines <CR>
 noremap <leader>fb :Buffers <CR>
 noremap <leader>ft :Tags <CR>
 "===============================================================================
 "=================================== Signify ===================================
 "===============================================================================
-"
 " Disable signify bu default
 let g:signify_disable_by_default = 1
 "==================================== Remaps
@@ -242,6 +335,7 @@ nnoremap <silent><leader>st : call g:SignifyToggleAll()<cr>
 "===============================================================================
 "=============================== Markdown Preview ==============================
 "===============================================================================
+nmap <silent> <F8> <Plug>MarkdownPreview
 let g:mkdp_auto_close = 1
 let g:mkdp_preview_options = {
     \ 'mkit': {},
@@ -262,12 +356,12 @@ lua require'colorizer'.setup()
 "===============================================================================
 "===================================== COC =====================================
 "===============================================================================
-nmap <leader> rn <Plug>(coc-rename)
-nmap <leader> dg :CocDiagnostics<cr>
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
+nmap <leader>rn <Plug>(coc-rename)
+nmap <leader>dg :CocDiagnostics<cr>
+nmap <silent>gd <Plug>(coc-definition)
+nmap <silent>gy <Plug>(coc-type-definition)
+nmap <silent>gi <Plug>(coc-implementation)
+nmap <silent>gr <Plug>(coc-references)
 "================ Use K to show documentation in preview window.
 function! s:show_documentation()
   if (index(['vim','help'], &filetype) >= 0)
@@ -291,10 +385,6 @@ augroup mygroup
 augroup end
 " Apply AutoFix to problem on the current line.
 nmap <leader>qf  <Plug>(coc-fix-current)
-"=========================== Configure JSON formating
-" json.enable set to false to disable json language server.
-call coc#config('json', {'.enable': 'true'})
-call coc#config('json', {'.format.enable': 'true'})
 "============================= Configure Extensions
 let g:coc_global_extensions = [
 \ 'coc-ultisnips',
@@ -309,17 +399,61 @@ let g:coc_global_extensions = [
 \ 'coc-prettier',
 \ 'coc-toml',
 \ 'coc-python',
+\ 'coc-rls',
+\ 'coc-fish',
+\ 'coc-snippets',
 \ ]
-"========================= Configure python interpreter/lints
+"========================= 
+"Setup python path
+" Wors case scenario, configure it manually every time :CocCommand python.setInterpreter
+"!!!!!!!!!! pynvim must be installed python3 -m pip install pynvim
 if $PYENV_VIRTUAL_ENV == ""
     let g:python3_host_prog=system('which python')
 else
-    let g:python3_host_prog=split(system('pyenv which python'), '\n')[-1] 
+    let g:python3_host_prog=$PYENV_VIRTUAL_ENV.'/bin/python3'
 endif
-call coc#config('python', {'pythonPath': g:python3_host_prog})
-call coc#config('python', {'setInterpreter': g:python3_host_prog})
-call coc#config('python', {'formatting.provider': 'autopep8'})
-call coc#config('python', {'setLinter': 'autopep8'})
+" Autinstall jedi
+function Autoinstall_jedi()
+  let l:python3_neovim_path = substitute(system("python3 -c 'import jedi; print(jedi.__path__)' 2>/dev/null"), '\n\+$', '', '')
+  if empty(l:python3_neovim_path)
+    execute ("!python3 -m pip install jedi")
+  endif
+endfunction
+" Auto install pynvim
+function Autoinstall_pynvim()
+  let l:python3_neovim_path = substitute(system("python3 -c 'import pynvim; print(pynvim.__path__)' 2>/dev/null"), '\n\+$', '', '')
+  if empty(l:python3_neovim_path)
+    execute ("!python3 -m pip install pynvim")
+  endif
+endfunction
+" Auto install flake8
+function Autoinstall_flake8()
+  let l:python3_neovim_path = substitute(system("python3 -c 'import flake8; print(flake8.__path__)' 2>/dev/null"), '\n\+$', '', '')
+  if empty(l:python3_neovim_path)
+    execute ("!python3 -m pip install flake8")
+  endif
+endfunction
+" Auto install autopep8
+function Autoinstall_autopep8()
+  let l:python3_neovim_path = substitute(system("python3 -c 'import autopep8; print(autopep8.__path__)' 2>/dev/null"), '\n\+$', '', '')
+  if empty(l:python3_neovim_path)
+    execute ("!python3 -m pip install autopep8")
+  endif
+endfunction
+" Must use VimEnter to make sure coc is loaded
+autocmd VimEnter *
+\    call Autoinstall_pynvim()
+\|    call Autoinstall_flake8()
+\|    if exists('g:did_coc_loaded')
+\|      call coc#config('python', {'pythonPath': g:python3_host_prog})
+\|      call coc#config('python', {'setInterpreter': g:python3_host_prog})
+\|      call coc#config('python', {'setLinter': 'flake8'})
+\|      call coc#config('python', {'formatting.provider': 'autopep8'})
+\|      call coc#config('python', {'python.globalModuleInstallation': 'true'})
+\|      call coc#config('json', {'.enable': 'true'})
+\|      call coc#config('json', {'.format.enable': 'true'})
+\|      call coc#config('suggestions', {'.floatEnable': 'true'})
+\|   endif
 "========================= Format Selected with :format
 command! -nargs=0 Format :call CocAction('format')
 "============================= Coc tab completition
@@ -333,6 +467,15 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 let g:coc_snippet_next = '<tab>'
+"========================= Coc floating windows scroll
+if has('nvim-0.4.0') || has('patch-8.2.0750')
+  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+endif
 "===============================================================================
 "=================================== NerdTree ==================================
 "===============================================================================
@@ -346,22 +489,25 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isT
 " Toggle NerdTree
 map <leader>ntt :NERDTreeToggle<CR>
 " Remove dir arrow
-let NERDTreeMinimalUI = 0
+let NERDTreeMinimalUI = 1
 let g:NERDTreeDirArrowExpandable = ''
 let g:NERDTreeDirArrowCollapsible = ''
-let NERDTreeIgnore = ['\.git$', '\node_modules']
+let NERDTreeIgnore = ['\.git$', '\node_modules', '\.pyc$', '__pycache__']
+let NERDTreeHighlightCursorline = 0
 "===============================================================================
-"============================= Style (OceanicNext)  ============================
+"================================= Style (Ayu) =================================
 "===============================================================================
-"Plug 'mhartington/oceanic-next'
-colorscheme OceanicNext
+let ayucolor="dark"   " for dark version of theme (dark/mirage/light)
+colorscheme OceanicNext "ayu
 " Keep background transparent for the colrscheme (must go after setting colorscheme)
 highlight Normal guibg=none ctermbg=none
 " ColorColumn Color
-highlight ColorColumn ctermbg=none guibg=#2c2d27
+"highlight ColorColumn ctermbg=none guibg=#2c2d27
 highlight LineNr guibg=none ctermbg=none
 highlight SignColumn guibg=none ctermbg=none
-
+highlight EndOfBuffer guibg=NONE ctermbg=NONE
+highlight VertSplit ctermbg=NONE ctermfg=NONE cterm=NONE guifg=none guibg=white
+set notermguicolors     " Hack to allow transparent split window
 "===============================================================================
 "=================================== Airline ===================================
 "===============================================================================
@@ -385,15 +531,16 @@ let g:csv_end = 200
 "===============================================================================
 "=================================== DevIcons ==================================
 "===============================================================================
-" Remove icons padding
 let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 let g:WebDevIconsNerdTreeAfterGlyphPadding = ' '
-let g:WebDevIconsNerdTreeBeforeGlyphPadding = ''
-let g:webdevicons_enable_nerdtree=1
+let g:WebDevIconsNerdTreeBeforeGlyphPadding = ' '
+let g:webdevicons_enable_nerdtree = 1
 let g:DevIconsEnableFoldersOpenClose = 1
-let g:webdevicons_conceal_nerdtree_brackets = 0
-let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ' '
-let g:DevIconsDefaultFolderOpenSymbol = ' '
+let g:webdevicons_conceal_nerdtree_brackets = 1
+"let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ' '
+"let g:DevIconsDefaultFolderOpenSymbol = ' '
+let g:WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol = ' '
+let g:DevIconsDefaultFolderOpenSymbol = ' '
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Custom Vim Scripts @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -410,7 +557,17 @@ let g:titlify_comments_config={
 \'ipynb':'#',
 \'js':'#',
 \'html':'<!--',
+\'sql':'--',
+\'hql':'--',
 \}
+
+"========================= function to call cht.sh
+command! -nargs=+ Help :call Help(<q-args>)
+fun! Help(...)
+    echo a:1
+	let argsl = split(a:args, ' ')
+	" execute 'AsyncRun -mode=terminal curl cht.sh/'.'EEE'.a:args[1]
+endfun
 "========================= function to format as title
 function Titlify(...) range
     " To avoid issues with autoformatting
@@ -458,4 +615,3 @@ endf
 noremap <leader>tt :call Titlify('title')<CR>
 noremap <leader>ts :call Titlify('subtitle')<CR>
 noremap <leader>th :call Titlify('halfsubtitle')<CR>
-
