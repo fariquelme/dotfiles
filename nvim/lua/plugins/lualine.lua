@@ -17,23 +17,24 @@ return {
 				grey = "#303030",
 				green = "#C1E0A6",
 				yellow = "#FCA311",
+				background = "#1E1E2E",
 			}
 
 			local bubbles_theme = {
 				normal = {
 					a = { fg = colors.black, bg = colors.green },
 					b = { fg = colors.white, bg = colors.grey },
-					c = { fg = colors.yellow, bg = colors.black },
+					c = { fg = colors.yellow, bg = colors.background },
 				},
 
-				insert = { a = { fg = colors.black, bg = colors.blue } },
-				visual = { a = { fg = colors.black, bg = colors.cyan } },
-				replace = { a = { fg = colors.black, bg = colors.red } },
+				insert = { a = { fg = colors.background, bg = colors.blue } },
+				visual = { a = { fg = colors.background, bg = colors.cyan } },
+				replace = { a = { fg = colors.background, bg = colors.red } },
 
 				inactive = {
-					a = { fg = colors.white, bg = colors.black },
-					b = { fg = colors.white, bg = colors.black },
-					c = { fg = colors.black, bg = colors.black },
+					a = { fg = colors.white, bg = colors.background },
+					b = { fg = colors.white, bg = colors.background },
+					c = { fg = colors.white, bg = colors.background },
 				},
 			}
 
